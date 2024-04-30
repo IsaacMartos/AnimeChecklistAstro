@@ -3,28 +3,36 @@ import Layout from '../layouts/Layout.astro';
 import Card from '../components/Card.astro';
 import AnimeRecommendation from '../components/AnimeRecommendation.astro';
 
-/*const info = await fetch('https://api.jikan.moe/v4/top/anime');
-const dataanime = await info.json();
-console.log(dataanime);*/
 
   const info = await fetch('https://api.jikan.moe/v4/top/anime');
   const responseData = await info.json();
   const animeTitles = responseData.data.map((anime: { titles: { title: any; }[]; }) => anime.titles[0].title);
-  console.log(animeTitles);  
+  
+  const animeTitlesRx = animeTitles.filter((title: string) => {
+  const anime = responseData.data.find((anime: { titles: { title: string }[] }) => anime.titles[0].title === title);
+  if (anime.rating[0].rating === "PG - Children") {
+    return true;
+  }
+  return false;
+});
+
+//console.log(animeTitlesRx);
+
+const reviewsinfo = await fetch('https://api.jikan.moe/v4/top/reviews');
+const reviewsData = await reviewsinfo.json();
+const animeType = reviewsData.data.map((anime: { type: { type: string }[] }) => anime.type[0].type === "manga");
+//console.log(animeType);
 ---
 
 <Layout title="Welcome to Astro.">
 	<main>
 		{ 
-
+			responseData.data.map((animeRecommendation: { titles: { title: string; }[]; }) => 
+			<AnimeRecommendation 
+			animeRecommendation = 
+			{animeRecommendation}/>)		
 		}
 	</main>
 </Layout>
 
 
-<style>
-	main{
-		display: flex;
-		margin-left: 50px;
-	}
-</style>
