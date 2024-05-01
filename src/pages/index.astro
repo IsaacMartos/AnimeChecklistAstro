@@ -65,10 +65,8 @@ const animeType = reviewsData.data.map(
     <main class="grid grid-cols-5 gap-2 ">
       {
         responseData.data.map(
-          (animeRecommendation: { titles: { title: string }[] }) => (
-            <div class="truncate font-semibold">
-            <AnimeRecommendation animeRecommendation={animeRecommendation} />
-          </div>
+          (animeRecommendation: { titles: { title: string }[] }) => (         
+            <AnimeRecommendation animeRecommendation={animeRecommendation} />        
           )
         )
       }
