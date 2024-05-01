@@ -1,38 +1,77 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Card from '../components/Card.astro';
-import AnimeRecommendation from '../components/AnimeRecommendation.astro';
+import Layout from "../layouts/Layout.astro";
+import Card from "../components/Card.astro";
+import AnimeRecommendation from "../components/AnimeRecommendation.astro";
 
 
-  const info = await fetch('https://api.jikan.moe/v4/top/anime');
-  const responseData = await info.json();
-  const animeTitles = responseData.data.map((anime: { titles: { title: any; }[]; }) => anime.titles[0].title);
-  
-  const animeTitlesRx = animeTitles.filter((title: string) => {
-  const anime = responseData.data.find((anime: { titles: { title: string }[] }) => anime.titles[0].title === title);
-  if (anime.rating[0].rating === "PG - Children") {
-    return true;
+const info = await fetch("https://api.jikan.moe/v4/top/anime");
+const responseData = await info.json();
+
+const animeID = 9253;
+const moreinfo = await fetch(`https://api.jikan.moe/v4/anime/${animeID}/moreinfo`); 
+const moreInfoData = await moreinfo.json();
+
+const animeTitles = responseData.data.map((anime: { titles: { title: string }[] } | undefined) => {
+  if (anime && anime.titles && anime.titles.length > 0 && anime.titles[0].title) {
+    return anime.titles[0].title;
+  } else {
+    // Handle cases where titles array is empty or title is missing
+    return 'Unknown Title';
+  }
+});
+
+
+const animeTitlesRx = animeTitles.filter((title: string) => {
+  const anime = responseData.data.find(
+    (anime: { titles: { title: string }[]; rating?: { rating: string }[] }) =>
+      anime.titles[0].title === title
+  );
+  if (anime) {
+    if (anime.rating && anime.rating[0].rating === "G - All Ages") {
+      return true;
+    }
   }
   return false;
 });
+const animeRatingsInfo = responseData.data.map(
+  (anime: { rating: { rating: string }[] }) => anime.rating
+);
 
-//console.log(animeTitlesRx);
+/*
+To see the ratings displays p R P
+console.log(
+  "Sample Ratings:",
+  animeRatingsInfo.map((ratings: any[]) => ratings[0])
+);*/
 
-const reviewsinfo = await fetch('https://api.jikan.moe/v4/top/reviews');
+
+//console.log(moreInfoData);
+// console.log(animeRatingsInfo, animeTitles, animeRatings);
+// console.log(animeTitlesRx);
+// console.log(animeTitles);
+//console.log(responseData);
+
+/*
+const reviewsinfo = await fetch("https://api.jikan.moe/v4/top/reviews");
 const reviewsData = await reviewsinfo.json();
-const animeType = reviewsData.data.map((anime: { type: { type: string }[] }) => anime.type[0].type === "manga");
+const animeType = reviewsData.data.map(
+  (anime: { type: { type: string }[] }) => anime.type[0].type === "manga"
+);*/
 //console.log(animeType);
 ---
 
-<Layout title="Welcome to Astro.">
-	<main>
-		{ 
-			responseData.data.map((animeRecommendation: { titles: { title: string; }[]; }) => 
-			<AnimeRecommendation 
-			animeRecommendation = 
-			{animeRecommendation}/>)		
-		}
-	</main>
+<Layout title="Astro main page">
+  <div class="mx-auto max-w-screen-lg py-10 gap">
+    <main class="grid grid-cols-5 gap-2 ">
+      {
+        responseData.data.map(
+          (animeRecommendation: { titles: { title: string }[] }) => (
+            <div class="truncate font-semibold">
+            <AnimeRecommendation animeRecommendation={animeRecommendation} />
+          </div>
+          )
+        )
+      }
+    </main>
+  </div>
 </Layout>
-
-
