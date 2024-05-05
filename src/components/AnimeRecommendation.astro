@@ -2,77 +2,104 @@
 const { animeRecommendation } = Astro.props;
 const { title, images, mal_id } = animeRecommendation;
 ---
+
 <div class="relative">
   <div id="imageContainer" class="cursor-pointer">
     <a href="#" id="moreInfoLink" data-mal-id={mal_id}>
-      <h1 class=" font-semibold text-center min-h-20">{title}</h1>
-      {images && images.jpg && (
-        <img
-          src={images.jpg.image_url}
-          alt="Anime Image"
-          class="h-72 object-cover w-52 my-6"
-        />
-      )}
+      <h1 class="font-semibold text-center min-h-20">{title}</h1>
+      {
+        images && images.jpg && (
+          <img
+            src={images.jpg.image_url}
+            alt="Anime Image"
+            class="h-72 object-cover w-52 my-6"
+          />
+        )
+      }
     </a>
-    <div id="popUp" class="absolute bottom-0 right-0 mb-4 mr-4 bg-slate-600 p-4 rounded-md shadow-md hidden">
-      <p class=" text-white">
-        This pop-up is activated when hovering over the image.</p>
+    <div
+      id="popUp"
+      class="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-600 p-4 rounded-md shadow-md transition duration-300 ease-in-out transform border border-white hidden"
+      aria-label="More information"
+      role="dialog"
+    >
+      <div id="popUpContent"></div>
     </div>
   </div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const imageContainers = document.querySelectorAll('.cursor-pointer');
+  {
+    /* This part of the script is to make work the pop-up */
+  }  
 
-    imageContainers.forEach((container) => {
-      const popUp = container.querySelector('#popUp');
+  document.addEventListener("DOMContentLoaded", function () {
+  const imageContainers = document.querySelectorAll("#imageContainer");
 
-      container.addEventListener('mouseover', function() {
-          if (popUp) {
-            popUp.classList.remove('hidden');
+  imageContainers.forEach((container) => {
+    const popUp = container.querySelector("#popUp");
+    console.log(popUp)
+
+    container.addEventListener("click", function (event) {
+      if (popUp) {
+        popUp.classList.remove("hidden");        
+      }
+    });
+
+    container.addEventListener("mouseleave", function () {
+      if (popUp) {
+        popUp.classList.add("hidden");
+      }
+    });
+
+    const moreInfoLinks = container.querySelectorAll("#moreInfoLink");
+    if (moreInfoLinks) {
+      moreInfoLinks.forEach((link) => {
+        link.addEventListener("click", function (event) {
+          event.preventDefault(); 
+          const animeId = link.getAttribute("data-mal-id");
+          if (animeId) {      
+            if (popUp) {
+              popUp.classList.remove("hidden");
+              showInformation(animeId, popUp);
+              console.log(popUp.textContent)
+            }
           }
         });
-
-        container.addEventListener('mouseleave', function() {
-          if (popUp) {
-            popUp.classList.add('hidden');
-          }
       });
-    });
+    }
   });
-</script>
+});  
 
+    function navigateToPage() {
+      window.location.href = "/description";
+    }
 
-<script>
-  import { navigate } from "astro:transitions/client";
+    function showInformation(animeID: string, popUp: Element) {
+      fetch(`https://api.jikan.moe/v4/anime/${animeID}/full`)
+        .then((response) => response.json())
+        .then((data) => {
 
-  function navigateToPage() {
-    window.location.href = "/description";
-  }
+          const animeData = data.data;
+          const animetitle = animeData.title;
+          const animescore = animeData.score;
+          const animeepisodes = animeData.episodes;
+          const animestatus = animeData.status;
 
-  function showInformation(animeID: string) {
-    fetch(`https://api.jikan.moe/v4/anime/${animeID}/full`)
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        //navigateToPage();
-      })
-      .catch((error) => {
-        console.error("Error fetching anime information:", error);
-      });
-  }
-
-  const moreInfoLink = document.querySelectorAll("#moreInfoLink");
-  if (moreInfoLink) {
-    moreInfoLink.forEach((link) => {
-      link.addEventListener("click", function (event) {
-        event.preventDefault(); // Prevent default behavior of anchor tag
-        const animeId = link.getAttribute("data-mal-id");
-        if (animeId) {
-          showInformation(animeId);
-        }
-      });
-    });
-  }
+          console.log(animetitle, animescore, animeepisodes, animestatus)
+         
+          const popUpContent = popUp.querySelector("#popUpContent");          
+          if (popUpContent) {
+            popUpContent.innerHTML = `
+            <p>Name: ${animetitle}</p>
+            <p>Episodes: ${animeepisodes}</p>
+            <p>Score: ${animescore}</p>
+            <p>Status: ${animestatus}</p>
+        `;
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching anime information:", error);
+        });
+    }  
 </script>
