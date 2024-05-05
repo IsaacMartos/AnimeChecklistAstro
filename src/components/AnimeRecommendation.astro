@@ -2,17 +2,47 @@
 const { animeRecommendation } = Astro.props;
 const { title, images, mal_id } = animeRecommendation;
 ---
-
-<div class="animeRecommendation font-semibold text-center ">
-  <h1 class="text-center min-h-16">{title}</h1>
-  <a href="#" id="moreInfoLink" data-mal-id={mal_id}>
-    {
-      images && images.jpg && (
-        <img src={images.jpg.image_url} alt="Anime Image" class="h-72 object-cover w-52 my-8" />
-      )
-    }
-  </a>
+<div class="relative">
+  <div id="imageContainer" class="cursor-pointer">
+    <a href="#" id="moreInfoLink" data-mal-id={mal_id}>
+      <h1 class=" font-semibold text-center min-h-20">{title}</h1>
+      {images && images.jpg && (
+        <img
+          src={images.jpg.image_url}
+          alt="Anime Image"
+          class="h-72 object-cover w-52 my-6"
+        />
+      )}
+    </a>
+    <div id="popUp" class="absolute bottom-0 right-0 mb-4 mr-4 bg-slate-600 p-4 rounded-md shadow-md hidden">
+      <p class=" text-white">
+        This pop-up is activated when hovering over the image.</p>
+    </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const imageContainers = document.querySelectorAll('.cursor-pointer');
+
+    imageContainers.forEach((container) => {
+      const popUp = container.querySelector('#popUp');
+
+      container.addEventListener('mouseover', function() {
+          if (popUp) {
+            popUp.classList.remove('hidden');
+          }
+        });
+
+        container.addEventListener('mouseleave', function() {
+          if (popUp) {
+            popUp.classList.add('hidden');
+          }
+      });
+    });
+  });
+</script>
+
 
 <script>
   import { navigate } from "astro:transitions/client";
@@ -22,11 +52,11 @@ const { title, images, mal_id } = animeRecommendation;
   }
 
   function showInformation(animeID: string) {
-    fetch(`https://api.jikan.moe/v4/anime/${animeID}/moreinfo`)
+    fetch(`https://api.jikan.moe/v4/anime/${animeID}/full`)
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-        navigateToPage();
+        //navigateToPage();
       })
       .catch((error) => {
         console.error("Error fetching anime information:", error);
